@@ -61,3 +61,7 @@ drops<-c("Subject","Activity","Activity Code")
 tidyMeans<-tidyMeans[,!(names(tidyMeans) %in% drops)]
 colnames(tidyMeans)[1:2]<-c("Activity","Subject")
 
+##Write tidyMeans to txt file
+write.table(tidyMeans, file="tidyMeans.txt",row.name=FALSE)
+View(tidyMeans)
+
