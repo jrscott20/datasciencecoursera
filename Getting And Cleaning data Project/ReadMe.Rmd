@@ -1,0 +1,51 @@
+---
+title: "ReadMe"
+author: "Jason Scott"
+date: "Wednesday, March 11, 2015"
+output: html_document
+---
+
+The only script is run_analysis.R. It does the following:
+
+- 1. If not done already, download the data to a temporary directory. I wanted a copy of the data so I unzipped and saved the data to my working directory.
+
+- 2. Paste together the various files and row bind the test and training sets. Test sets are column binded with test sets and training sets are column binded with training sets. Looking at the dimensions makes it obvious how to paste all the test files and all the training files together.  For example, this code pastes the test files together:
+```{r eval=FALSE}
+##paste together test files
+x_test<-read.table("./test/X_test.txt") # test data
+y_test<-read.table("./test/y_test.txt", colClasses="factor") # test activity labels
+subject_test<-read.table("./test/subject_test.txt") ## test subject label
+test<-cbind(x_test,y_test,subject_test) #paste together
+```
+The same thing is done for the training set then use 
+```{r eval=FALSE}
+##paste test to train files
+pasted<-rbind(test,train)
+```
+to concatenate the test and training sets. This next part gives the columns variable names
+```{r eval=FALSE}
+##give columns names
+features<-read.table("./features.txt")
+colnames(pasted)<-c(as.character(features[,2]), "Activity Code", "Subject") 
+```
+
+- 3. Select only measurements that have to do with means or standard deviations. I choose to keep every variable that has "mean", "Mean", or "std" in it. Also keep the subject and activity identifiers.
+```{r eval=FALSE}
+vars<-colnames(pasted)
+smallData<-pasted[,grepl("mean",vars) | grepl("Mean",vars) | grepl("std",vars)
+                  | grepl("Subject",vars) | grepl("Activity Code",vars)]
+```
+Also, we replace the Activity Codes with their text descriptors
+```{r eval=FALSE}
+activity_labels<-read.table("./activity_labels.txt",col.names=c("Activity Code","Activity"))
+cleanData<-merge(smallData,activity_labels,by.x="Activity Code", by.y="Activity.Code",sort=FALSE)
+````
+- 4. Calculate the mean of all of the kept variables for each activity and each subject and clean up the data set.
+```{r eval=FALSE}
+tidyMeans<-aggregate(cleanData,by=list(cleanData$Activity,cleanData$Subject),FUN=mean)
+drops<-c("Subject","Activity","Activity Code")
+tidyMeans<-tidyMeans[,!(names(tidyMeans) %in% drops)]
+colnames(tidyMeans)[1:2]<-c("Activity","Subject")
+```
+- 5. The very last line of code just writes the tidy data set to a txt file named tidyMeans.txt.
+To read tidyMeans.txt into R use data<- read.table("./tidyMeans.txt", header=TRUE) as long as tidyMeans.txt was saved to your home directory.
